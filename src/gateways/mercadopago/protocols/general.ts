@@ -1,7 +1,7 @@
 import { MercadoPago } from ".";
 
 export interface Constructable<T> {
-  new (key: string, options?: { locale: string }): T;
+  new (key: string, options?: { locale: string, advancedFraudPrevention?: boolean }): T;
 }
 
 declare global {

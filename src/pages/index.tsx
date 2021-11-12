@@ -1,146 +1,113 @@
-import { useEffect, useState } from "react";
-import { MercadoPago } from "../gateways/mercadopago/protocols";
-import { useForm } from 'react-hook-form';
-
-type Option = {
-  label: string;
-  value: string;
-};
+import { useEffect, useState } from 'react'
+import { MercadoPago } from '../gateways/mercadopago/protocols'
+import { useForm } from 'react-hook-form'
+import { useMercadoPago } from '../gateways/mercadopago/useMercadopago'
 
 type FormValues = {
   cardNumber: string
-  cardExpirationMonth: number
-  cardExpirationYear: number
-  securityCode: number
+  cardExpirationMonth: string
+  cardExpirationYear: string
+  securityCode: string
   cardholderName: string
   cardholderEmail: string
-  identificationNumber: number
-  installments: string;
-  identificationType: string;
-};
+  identificationNumber: string
+  installments: string
+  identificationType: string
+}
 
-export default function Home() {
-  const [mercadopago, setMercadopago] = useState<MercadoPago>();
-  const [installmentOptions, setInstallmentOptions] = useState<Option[]>([]);
-  const [cardFlag, setCardFlag] = useState<{ image: string, name: string } | null>(null);
-  const [amount, setAmount] = useState<string>('1000');
-  const [identificationTypeOptions, setIdentificationTypeOptions] = useState<Option[]>([]);
+type HomeProps = {
+  amount: string
+}
+export default function Home({amount}:HomeProps) {
+  const {
+    setAmountValue,
+    checkCardDigits,
+    cardFlag,
+    identificationTypeOptions,
+    installmentOptions,
+    createToken
+  } = useMercadoPago({})
 
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormValues>({
-    defaultValues: {},
-  });
+  const [asyncDefaultInstallment, setAsyncDefaultInstallment] = useState<number>(0)
+  const [asyncDefaultIdentificationType, setAsyncDefaultIdentificationType] = useState<number>(0)
 
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://sdk.mercadopago.com/js/v2";
-    script.addEventListener("load", () => {
-      setMercadopago(
-        new window.MercadoPago("TEST-8807ea39-dcbd-490a-9995-03243db129be", {
-          locale: "pt-BR",
-        })
-      );
-    });
-    document.body.appendChild(script);
-    return () => {
-      let iframe = document.body.querySelector('iframe[src*="mercadolibre"]');
-      if (iframe) {
-        document.body.removeChild(iframe);
-      }
-      document.body.removeChild(script);
-    };
-  }, []);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    getValues,
+    formState: { errors }
+  } = useForm<FormValues>({
+    defaultValues: {}
+  })
 
   useEffect(() => {
-    if (mercadopago) {
-      getIdentificationTypes()
+    setAmountValue(amount)
+  }, [])
+
+  useEffect(() => {
+    if(identificationTypeOptions.length > 1 && !asyncDefaultIdentificationType){
+      setValue('identificationType', identificationTypeOptions[0].value)
+      setAsyncDefaultIdentificationType(1)
     }
-  }, [mercadopago]);
+  }, [identificationTypeOptions])
 
-  async function getIdentificationTypes() {
-    const identificationTypes = await mercadopago.getIdentificationTypes()
-    const identificationType = identificationTypes.map((item) => ({
-      label: item.name,
-      value: item.id
-    }))
-    setIdentificationTypeOptions(identificationType)
-    setValue('identificationType', identificationType[0].value)
-  }
-
-  function checkCardDigits(cardNumber: string) {
-    if (mercadopago) {
-      const cardDigits = cardNumber.replace(/\s/g, '');
-      if (cardDigits.length >= 6) {
-        const bin = cardDigits.substr(0, 6)
-        getCardFlag(bin)
-        getInstallments(bin, amount)
-      }
+  useEffect(() => {
+    if(installmentOptions.length > 1 && !asyncDefaultInstallment){
+      setValue('installments', installmentOptions[0].value)
+      setAsyncDefaultInstallment(1)
     }
+  }, [installmentOptions])
+
+  function handleCreditCardNumber(value: string) {
+    checkCardDigits(value)
   }
 
-  async function getCardFlag(cardFirstSixDigit: string) {
-    try {
-      const paymentMethods = await mercadopago.getPaymentMethods({ bin: cardFirstSixDigit })
-      setCardFlag({
-        name: paymentMethods.results[0].name,
-        image: paymentMethods.results[0].secure_thumbnail,
-      })
-      await getInstallments(cardFirstSixDigit, amount)
-    } catch (err) {
-      setInstallmentOptions([])
-    }
-  }
-
-  async function getInstallments(bin: string, price: string) {
-    const installments = await mercadopago.getInstallments({
-      amount: price,
-      bin,
-    })
-    const installment = installments[0].payer_costs.map((item) => ({
-      label: item.recommended_message,
-      value: item.installments
-    }))
-    setInstallmentOptions(installment)
-    setValue('installments', installment[0].value)
-  }
-
-  async function createToken() {
-    const cardToken = await mercadopago.createCardToken({
-      cardNumber: '5031433215406351',
-      cardholderName: 'APRO',
-      cardExpirationMonth: '11',
-      cardExpirationYear: '2025',
-      securityCode: '123',
-      identificationType: 'CPF',
-      identificationNumber: '12345678912',
-    })
-  }
-
-  const onSubmit = handleSubmit((data) => console.log(data));
+  const onSubmit = handleSubmit(async data => {
+    const cardToken = await createToken(data)
+    console.log(data)
+    console.info(cardToken)
+  })
 
   return (
     <div className="flex w-100 h-screen items-center justify-center justify-items-center bg-gray-100">
       <main className="max-w-xl bg-gray-50 shadow-lg rounded-lg p-8">
-        <h1 className="text-blue-900 font-bold text-xl text-center py-4">Mercadopago Checkout Transparente</h1>
+        <h1 className="text-blue-900 font-bold text-xl text-center py-4">
+          Mercadopago Checkout Transparente
+        </h1>
 
-        <form id="form-checkout" className="p-8 flex flex-col gap-2" onSubmit={onSubmit}>
-          {cardFlag && (<img src={cardFlag.image} alt={cardFlag.name} width="31px" height="24px" />)}
+        <form
+          id="form-checkout"
+          className="p-8 flex flex-col gap-2"
+          onSubmit={onSubmit}
+        >
+          {cardFlag && (
+            <img
+              src={cardFlag.image}
+              alt={cardFlag.name}
+              width="31px"
+              height="24px"
+            />
+          )}
 
           <div className="flex flex-row gap-2">
             <div className="flex-4">
               <input
                 type="text"
-                {...register("cardNumber")}
+                {...register('cardNumber')}
                 id="form-checkout__cardNumber"
                 placeholder="Número do cartão"
                 className="mp-input"
-                onChange={(e) => checkCardDigits(e.target.value)}
+                onChange={e => handleCreditCardNumber(e.target.value)}
               />
             </div>
 
             <div className="flex flex-row flex-1 gap-2">
               <input
                 type="text"
-                {...register("cardExpirationMonth")}
+                {...register('cardExpirationMonth')}
                 id="form-checkout__cardExpirationMonth"
                 placeholder="Mês"
                 className="mp-input"
@@ -148,7 +115,7 @@ export default function Home() {
 
               <input
                 type="text"
-                {...register("cardExpirationYear")}
+                {...register('cardExpirationYear')}
                 id="form-checkout__cardExpirationYear"
                 placeholder="Ano"
                 className="mp-input"
@@ -158,7 +125,7 @@ export default function Home() {
             <div className="flex w-20">
               <input
                 type="text"
-                {...register("securityCode")}
+                {...register('securityCode')}
                 id="form-checkout__securityCode"
                 placeholder="CVV"
                 className="mp-input"
@@ -169,17 +136,19 @@ export default function Home() {
           <select
             id="form-checkout__installments"
             className="mp-input"
-            {...register("installments")}
+            {...register('installments')}
           >
             {installmentOptions?.map(option => (
-              <option key={option.value} value={option.value}>{option.label}</option>
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
             ))}
           </select>
 
           <div>
             <input
               type="text"
-              {...register("cardholderName")}
+              {...register('cardholderName')}
               id="form-checkout__cardholderName"
               placeholder="Nome do portador"
               className="mp-input"
@@ -189,7 +158,7 @@ export default function Home() {
           <div>
             <input
               type="email"
-              {...register("cardholderEmail")}
+              {...register('cardholderEmail')}
               id="form-checkout__cardholderEmail"
               placeholder="E-mail do portador"
               className="mp-input"
@@ -199,19 +168,21 @@ export default function Home() {
           <div className="flex flex-row gap-2">
             <div className="flex w-24">
               <select
-                {...register("identificationType")}
+                {...register('identificationType')}
                 id="form-checkout__identificationType"
                 className="mp-input"
               >
-                {identificationTypeOptions?.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                {identificationTypeOptions?.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
                 ))}
               </select>
             </div>
             <div className="flex w-full">
               <input
                 type="text"
-                {...register("identificationNumber")}
+                {...register('identificationNumber')}
                 id="form-checkout__identificationNumber"
                 className="mp-input"
               />
@@ -221,16 +192,16 @@ export default function Home() {
           <button type="submit" id="form-checkout__submit">
             Pagar
           </button>
-
         </form>
       </main>
     </div>
   )
 }
 
-export function getServerSideProps(){
-
+export function getServerSideProps() {
   return {
-    props: {}
+    props: {
+      amount: '29800'
+    }
   }
 }
