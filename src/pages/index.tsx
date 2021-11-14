@@ -121,7 +121,7 @@ export default function Home({ amount }: HomeProps) {
   }
 
   return (
-    <div className="flex w-100 h-screen items-center justify-center justify-items-center bg-gray-100">
+    <div className="flex w-100 items-center justify-center justify-items-center bg-gray-100 my-10">
       <main className="max-w-2xl w-full bg-gray-50 shadow-lg rounded-lg p-2 sm:p-6 m-2">
         <h1 className="text-blue-900 font-bold text-2xl text-center py-1">
           Mercadopago Checkout Transparente
@@ -243,7 +243,7 @@ export default function Home({ amount }: HomeProps) {
             <button
               type="submit"
               id="form-checkout__submit"
-              className="mp-button"
+              className="mp-button mt-4"
             >
               Concluir pagamento
             </button>
