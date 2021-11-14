@@ -3,5 +3,26 @@
 @tailwind utilities;
 
 .mp-input{
-  @apply py-2 px-2 w-full rounded-lg border-2 border-gray-200 focus:border-blue-400 focus:outline-none focus:ring-2
+  @apply py-2 px-2 w-full rounded-lg border-2 text-gray-600 mt-1 bg-white border-gray-200 focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-600/50
+}
+
+.mp-button{
+  @apply rounded-lg px-4 py-2 text-blue-50 bg-blue-600 hover:bg-blue-700 active:bg-blue-900 focus:bg-blue-900 focus:outline-none focus:ring-4 ring-blue-600/50
+}
+
+@layer utilities {
+  @variants responsive {
+      .text-shadow {
+        text-shadow: 2px 2px 4px black;
+      }
+      .text-shadow-md {
+        text-shadow: 4px 4px 8px black;
+      }
+      .text-shadow-lg {
+        text-shadow: 15px 15px 30px black;
+      }
+      .text-shadow-none {
+        text-shadow: none;
+      }
+  }
 }

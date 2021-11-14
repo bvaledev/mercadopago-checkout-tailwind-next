@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { UseFormSetError } from 'react-hook-form'
 import { CreateCardToken, MercadoPago } from './protocols'
 
 type Option = {
@@ -6,13 +7,27 @@ type Option = {
   value: string
 }
 
-type CardFlag = {
+export type CardFlag = {
   id: string
   image: string
   name: string
 }
 
-type UseMercadoPagoProps = {}
+export type CheckoutFormValues = {
+  cardNumber: string
+  cardExpirationMonth: string
+  cardExpirationYear: string
+  securityCode: string
+  cardholderName: string
+  cardholderEmail: string
+  identificationNumber: string
+  installments: string
+  identificationType: string
+}
+
+type UseMercadoPagoProps = {
+  setError: UseFormSetError<CheckoutFormValues>
+}
 
 type UseMercadoPago = {
   identificationTypeOptions: Option[]
@@ -23,7 +38,9 @@ type UseMercadoPago = {
   createToken: (cardInfo: CreateCardToken) => Promise<string>
 }
 
-export function useMercadoPago({}: UseMercadoPagoProps): UseMercadoPago {
+export function useMercadoPago({
+  setError
+}: UseMercadoPagoProps): UseMercadoPago {
   const [mercadopago, setMercadopago] = useState<MercadoPago | null>(null)
 
   const [identificationTypeOptions, setIdentificationTypeOptions] = useState<
@@ -32,6 +49,7 @@ export function useMercadoPago({}: UseMercadoPagoProps): UseMercadoPago {
   const [installmentOptions, setInstallmentOptions] = useState<Option[]>([])
   const [cardFlag, setCardFlag] = useState<CardFlag | null>(null)
   const [amount, setAmount] = useState<string | null>(null)
+  const [errors, setErrors] = useState<string[] | null>([])
 
   useEffect(() => {
     const script = document.createElement('script')
@@ -94,11 +112,11 @@ export function useMercadoPago({}: UseMercadoPagoProps): UseMercadoPago {
       setCardFlag({
         id: paymentMethods.results[0].id,
         name: paymentMethods.results[0].name,
-        image: paymentMethods.results[0].secure_thumbnail
+        image: `https://http2.mlstatic.com/frontend-assets/landing-op-internal-products/paymentMethods/checkout/credito/_${paymentMethods.results[0].id}.svg`
       })
       await getInstallments(cardFirstSixDigit, amount)
     } catch (err) {
-      setInstallmentOptions([])
+      setError('cardNumber', { message: 'Invalid card number' })
     }
   }
 
@@ -113,7 +131,6 @@ export function useMercadoPago({}: UseMercadoPagoProps): UseMercadoPago {
           label: item.recommended_message,
           value: String(item.installments)
         }))
-
         setInstallmentOptions(installments)
       }
     } else {
@@ -122,7 +139,7 @@ export function useMercadoPago({}: UseMercadoPagoProps): UseMercadoPago {
   }
 
   async function createToken(cardInfo: CreateCardToken) {
-    const cardNumber = cardInfo.cardNumber.replace(/\s/g, '');
+    const cardNumber = cardInfo.cardNumber.replace(/\s/g, '')
     const cardToken = await mercadopago.createCardToken({
       cardNumber,
       cardholderName: cardInfo.cardholderName,
@@ -130,10 +147,10 @@ export function useMercadoPago({}: UseMercadoPagoProps): UseMercadoPago {
       cardExpirationYear: cardInfo.cardExpirationYear,
       securityCode: cardInfo.securityCode,
       identificationType: cardInfo.identificationType,
-      identificationNumber: cardInfo.identificationNumber,
+      identificationNumber: cardInfo.identificationNumber
     })
 
-    return cardToken.id;
+    return cardToken.id
   }
 
   return {
