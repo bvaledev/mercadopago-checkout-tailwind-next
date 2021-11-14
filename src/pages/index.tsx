@@ -132,6 +132,7 @@ export default function Home({ amount }: HomeProps) {
           <a
             href="https://www.mercadopago.com.br/developers/pt/guides/online-payments/checkout-pro/test-integration#bookmark_teste_o_fluxo_de_pagamento"
             className="text-blue-700"
+            target="_blank"
           >
             acesse os cartões disponíveis para teste aqui.
           </a>
