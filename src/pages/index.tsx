@@ -126,7 +126,12 @@ export default function Home({ amount }: HomeProps) {
         <h1 className="text-blue-900 font-bold text-2xl text-center py-1">
           Mercadopago Checkout Transparente
         </h1>
-
+        <p className='text-center text-gray-700'>
+        Esta é uma aplicação de exemplo, não utilize um cartao de credito real. <br/>
+        <a href='https://www.mercadopago.com.br/developers/pt/guides/online-payments/checkout-pro/test-integration#bookmark_teste_o_fluxo_de_pagamento' className='text-blue-700'>
+          acesse os cartões disponíveis para teste aqui.
+        </a>
+        </p>
         <form
           id="form-checkout"
           className="p-2 sm:p-8 flex flex-col gap-2"
