@@ -15,7 +15,7 @@ import { CreditCard } from '../components/CreditCard/CreditCard'
 const schema = yup.object({
   cardNumber: yup
     .string()
-    .test('len', 'Invalid card', value => {
+    .test('len', 'O número do cartão é inválido', value => {
       const cardNumber = value.replace(/[^0-9]+/g, '')
       return (
         cardNumber.length >= 15 &&
@@ -24,14 +24,14 @@ const schema = yup.object({
       )
     })
     .required('O número do cartão é obrigatório'),
-  cardExpirationMonth: yup.string(),
-  cardExpirationYear: yup.string(),
-  securityCode: yup.string(),
-  cardholderName: yup.string(),
-  cardholderEmail: yup.string(),
-  identificationNumber: yup.string(),
-  installments: yup.string(),
-  identificationType: yup.string()
+  cardExpirationMonth: yup.string().required('Informe o mês'),
+  cardExpirationYear: yup.string().required('Informe o ano'),
+  securityCode: yup.string().required('Informe o cvv'),
+  cardholderName: yup.string().required('Informe o nome'),
+  cardholderEmail: yup.string().email().required('Inform um e-mail'),
+  identificationNumber: yup.string().required('Informe o documento'),
+  installments: yup.string().required('Informe quantidade de parcela'),
+  identificationType: yup.string().required('Informe o tipo de documento')
 })
 
 type HomeProps = {
@@ -126,11 +126,15 @@ export default function Home({ amount }: HomeProps) {
         <h1 className="text-blue-900 font-bold text-2xl text-center py-1">
           Mercadopago Checkout Transparente
         </h1>
-        <p className='text-center text-gray-700'>
-        Esta é uma aplicação de exemplo, não utilize um cartao de credito real. <br/>
-        <a href='https://www.mercadopago.com.br/developers/pt/guides/online-payments/checkout-pro/test-integration#bookmark_teste_o_fluxo_de_pagamento' className='text-blue-700'>
-          acesse os cartões disponíveis para teste aqui.
-        </a>
+        <p className="text-center text-gray-700">
+          Esta é uma aplicação de exemplo, não utilize um cartao de credito
+          real. <br />
+          <a
+            href="https://www.mercadopago.com.br/developers/pt/guides/online-payments/checkout-pro/test-integration#bookmark_teste_o_fluxo_de_pagamento"
+            className="text-blue-700"
+          >
+            acesse os cartões disponíveis para teste aqui.
+          </a>
         </p>
         <form
           id="form-checkout"
