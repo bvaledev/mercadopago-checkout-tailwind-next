@@ -27,7 +27,7 @@ export const InputBase: ForwardRefRenderFunction<HTMLInputElement, InputProps> =
           {...rest}
           id={id}
           placeholder={label}
-          className="mp-input"
+          className={`mp-input ${error?.message && 'border-red-600'}`}
           aria-describedby="inputGroupPrepend3"
           ref={ref}
         />

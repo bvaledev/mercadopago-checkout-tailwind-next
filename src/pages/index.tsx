@@ -181,6 +181,7 @@ export default function Home({ amount }: HomeProps) {
                 placeholder="Parcelas"
                 options={installmentOptions}
               />
+            <small className="text-gray-400">As parcelas só aparecem depois de informar o número cartão</small>
             </div>
             <CreditCard
               cardFlag={cardFlag}

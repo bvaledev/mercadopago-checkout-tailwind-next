@@ -32,7 +32,7 @@ export const SelectBase: ForwardRefRenderFunction<
       </label>
       <select
         id={id}
-        className="mp-input "
+        className={`mp-input ${error?.message && 'border-red-600'}`}
         {...rest}
         placeholder={label}
         ref={ref}
